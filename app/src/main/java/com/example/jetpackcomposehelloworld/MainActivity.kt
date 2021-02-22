@@ -19,9 +19,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcomposehelloworld.ui.theme.JetpackComposeHelloWorldTheme
 
+external fun hello(): String;
+external fun sleep(): String;
+
+fun loadTestLib() {
+    System.loadLibrary("roast")
+}
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        loadTestLib()
         setContent {
             JetpackComposeHelloWorldTheme {
                 // A surface container using the 'background' color from the theme
@@ -43,6 +51,7 @@ fun Counter(count: Int, updater: (Int) -> Unit) {
 @Composable
 fun NewsStory() {
     val counterCount = remember { mutableStateOf(0) }
+    val labelText = remember { mutableStateOf("This string is from Kotlin") }
 
     val image = imageResource(R.drawable.header)
     MaterialTheme {
@@ -67,6 +76,15 @@ fun NewsStory() {
             Text("Feb 2021", style = typography.body2)
             Divider(thickness = 32.dp)
             Counter(counterCount.value) { newCount -> counterCount.value = newCount }
+            Divider(thickness = 32.dp)
+
+            Button(onClick = {
+                Thread {
+                    labelText.value = sleep()
+                }.start()
+            }) {
+                Text(labelText.value)
+            }
         }
     }
 }
