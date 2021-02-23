@@ -19,8 +19,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcomposehelloworld.ui.theme.JetpackComposeHelloWorldTheme
 
-external fun hello(): String;
-external fun sleep(): String;
+external fun connect(setLabelText: (String) -> Unit): String;
+external fun loginit();
 
 fun loadTestLib() {
     System.loadLibrary("roast")
@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         loadTestLib()
+        loginit()
         setContent {
             JetpackComposeHelloWorldTheme {
                 // A surface container using the 'background' color from the theme
@@ -52,6 +53,10 @@ fun Counter(count: Int, updater: (Int) -> Unit) {
 fun NewsStory() {
     val counterCount = remember { mutableStateOf(0) }
     val labelText = remember { mutableStateOf("This string is from Kotlin") }
+
+    fun setLabelText(text: String) {
+        labelText.value = text
+    }
 
     val image = imageResource(R.drawable.header)
     MaterialTheme {
@@ -80,7 +85,9 @@ fun NewsStory() {
 
             Button(onClick = {
                 Thread {
-                    labelText.value = sleep()
+//                    labelText.value = connect()
+                    labelText.value = connect(::setLabelText)
+
                 }.start()
             }) {
                 Text(labelText.value)
