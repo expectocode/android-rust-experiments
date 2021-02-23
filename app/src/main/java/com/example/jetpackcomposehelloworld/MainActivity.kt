@@ -19,8 +19,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcomposehelloworld.ui.theme.JetpackComposeHelloWorldTheme
 
-external fun connect(setLabelText: (String) -> Unit): String;
-external fun loginit();
+external fun listen(): String;
+external fun init();
+external fun sendMsg(message: String)
 
 fun loadTestLib() {
     System.loadLibrary("roast")
@@ -30,7 +31,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         loadTestLib()
-        loginit()
+        init()
+
+        Thread {
+            println("Going to listen")
+            listen()
+            println("Done listening")
+        }.start()
+
         setContent {
             JetpackComposeHelloWorldTheme {
                 // A surface container using the 'background' color from the theme
@@ -86,7 +94,8 @@ fun NewsStory() {
             Button(onClick = {
                 Thread {
 //                    labelText.value = connect()
-                    labelText.value = connect(::setLabelText)
+//                    labelText.value = connect(::setLabelText)
+                    sendMsg("this kotlin string will be ignored")
 
                 }.start()
             }) {

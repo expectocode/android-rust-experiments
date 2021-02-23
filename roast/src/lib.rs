@@ -7,6 +7,7 @@ use jni::objects::{JClass, JObject};
 use jni::sys::jstring;
 use jni::JNIEnv;
 use tokio::runtime;
+use tokio::sync::mpsc;
 use tokio::time::sleep;
 
 use android_logger;
@@ -16,8 +17,12 @@ use log::Level;
 #[allow(unused_imports)]
 use log::{debug, error, info, trace, warn};
 
+use once_cell::sync::OnceCell;
+
+static CELL: OnceCell<mpsc::Sender<&[u8]>> = OnceCell::new();
+
 #[no_mangle]
-pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_loginit(
+pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_init(
     _env: JNIEnv,
     _: JClass,
 ) {
@@ -26,10 +31,20 @@ pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_connect(
+pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_sendMsg(
+    _env: JNIEnv,
+    _: JClass,
+    input: JObject,
+) {
+    warn!("Should be using input :{:?}", input);
+    let tx = CELL.get().unwrap();
+    tx.blocking_send(b"heyyoooo").unwrap();
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_listen(
     env: JNIEnv,
     _: JClass,
-    setLabelText: JObject,
 ) -> jstring {
     let runtime = runtime::Builder::new_current_thread()
         .enable_all()
@@ -37,6 +52,15 @@ pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_
         .unwrap();
 
     let msg = runtime.block_on(async {
+        let (tx, mut rx) = mpsc::channel(100); /* TODO const*/
+        CELL.get_or_init(|| tx);
+
+        // tx.send(b"Got em!\n");
+
+        while let Some(res) = rx.recv().await {
+            warn!("rust got = {:?}", res);
+        }
+
         let api_id = 85381;
         let api_hash = "3e368f6bc7a6b30844b9e88cc940c151";
         let _phone = "PHONE";
@@ -56,7 +80,7 @@ pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_
         // .expect("Make this function return result");
     });
 
-    let msg = format!("{}, callback: {:?}", msg, setLabelText);
+    let msg = format!("{}", msg);
 
     // env.call_method(callback, "factCallback", "(I)V", &[res.into()])
     // .unwrap();
