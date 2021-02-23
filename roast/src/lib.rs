@@ -1,6 +1,8 @@
 #![cfg(target_os = "android")]
 #![allow(non_snake_case)]
 
+use std::io::Write;
+use std::os::unix::net::UnixStream;
 use std::time::Duration;
 
 use jni::objects::{JClass, JObject};
@@ -15,6 +17,21 @@ use grammers_session::MemorySession;
 use log::Level;
 #[allow(unused_imports)]
 use log::{debug, error, info, trace, warn};
+use nix;
+
+#[no_mangle]
+pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_listen(
+    _env: JNIEnv,
+    _: JClass,
+) {
+    let mut stream = UnixStream::connect("sock");
+    warn!("{:?}", stream);
+    // stream.write_all(b"hello world\n").unwrap();
+    // // todo!("Listen on a queue, which UI thread will add to");
+    // loop {
+    //     std::thread::sleep(Duration::from_millis(500));
+    // }
+}
 
 #[no_mangle]
 pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_loginit(
@@ -56,7 +73,11 @@ pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_
         // .expect("Make this function return result");
     });
 
-    let msg = format!("{}, callback: {:?}", msg, setLabelText);
+    let msg = format!(
+        "{}, callback: {:?}",
+        msg,
+        env.get_object_class(setLabelText)
+    );
 
     // env.call_method(callback, "factCallback", "(I)V", &[res.into()])
     // .unwrap();

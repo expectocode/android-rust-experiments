@@ -1,5 +1,8 @@
 package com.example.jetpackcomposehelloworld
 
+import android.net.LocalServerSocket
+import android.net.LocalSocket
+import android.net.LocalSocketAddress
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
@@ -18,9 +21,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcomposehelloworld.ui.theme.JetpackComposeHelloWorldTheme
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
-external fun connect(setLabelText: (String) -> Unit): String;
-external fun loginit();
+external fun connect(setLabelText: (String) -> Unit): String
+external fun loginit()
+external fun listen()
 
 fun loadTestLib() {
     System.loadLibrary("roast")
@@ -31,6 +37,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         loadTestLib()
         loginit()
+
+//        val local_server_sock = LocalServerSocket("/tmp/sock");
+        val local_sock = LocalSocket()
+        local_sock.bind(LocalSocketAddress("sock", LocalSocketAddress.Namespace.FILESYSTEM))
+        Thread {
+            val reader = BufferedReader(InputStreamReader(local_sock.inputStream))
+            while (true) {
+                Thread.sleep(1000)
+                println("Socket: " + reader.readLine())
+            }
+        }.start()
+
+        val rustThread = Thread {
+            // TODO wait for a synch primitive from socket creator thread
+            listen()
+//            val oof = LocalSocket();
+//            println("got local socket")
+//            oof.connect(LocalSocketAddress("/tmp/sock"))
+//            oof.outputStream.write("get rkt kiddo\n".toByteArray())
+        }.start()
+
         setContent {
             JetpackComposeHelloWorldTheme {
                 // A surface container using the 'background' color from the theme
