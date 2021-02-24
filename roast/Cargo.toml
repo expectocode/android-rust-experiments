@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "1.2.0", features = ["rt", "time", "sync"] }
-jni = "0.19.0"
+robusta_jni = { git = "https://github.com/giovanniberti/robusta.git" }
 grammers-client = { git = "https://github.com/Lonami/grammers.git" }
 grammers-session = { git = "https://github.com/Lonami/grammers.git" }
 log = "0.4.14"

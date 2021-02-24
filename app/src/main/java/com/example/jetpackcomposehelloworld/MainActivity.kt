@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.example.jetpackcomposehelloworld.ui.theme.JetpackComposeHelloWorldTheme
 
 external fun listen(): String;
-external fun init();
+external fun init(text: String);
 external fun sendMsg(message: ByteArray)
 
 fun loadTestLib() {
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         loadTestLib()
-        init()
+        init("hi")
 
         Thread {
             println("Going to listen")

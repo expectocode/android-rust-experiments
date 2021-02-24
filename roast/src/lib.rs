@@ -1,16 +1,14 @@
 #![cfg(target_os = "android")]
-#![allow(non_snake_case)]
 
-use std::time::Duration;
+use robusta_jni::bridge;
 
-use jni::objects::JClass;
-use jni::sys::{jbyteArray, jstring};
-use jni::JNIEnv;
+#[bridge]
+mod jni_exports {
+use robusta_jni::jni::JNIEnv;
+use robusta_jni::jni::sys::jbyteArray;
 use tokio::runtime;
 use tokio::sync::mpsc;
-use tokio::time::sleep;
 
-use android_logger;
 use grammers_client::{Client, Config};
 use grammers_session::MemorySession;
 use log::Level;
@@ -21,31 +19,23 @@ use once_cell::sync::OnceCell;
 
 static CELL: OnceCell<mpsc::Sender<Vec<u8>>> = OnceCell::new();
 
-#[no_mangle]
-pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_init(
-    _env: JNIEnv,
-    _: JClass,
-) {
+    #[package(com.example.jetpackcomposehelloworld)]
+    struct MainActivityKt;
+
+    impl MainActivityKt {
+pub extern "jni" fn init(text_from_kotlin: String) {
     android_logger::init_once(android_logger::Config::default().with_min_level(Level::Trace));
     debug!("Initialized android logging");
+    debug!("Kotlin says {}", text_from_kotlin);
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_sendMsg(
-    env: JNIEnv,
-    _: JClass,
-    input: jbyteArray,
-) {
+pub extern "jni" fn sendMsg(env: &JNIEnv, input: jbyteArray) {
     let input = env.convert_byte_array(input).unwrap();
     let tx = CELL.get().unwrap();
     tx.blocking_send(input).unwrap();
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_listen(
-    env: JNIEnv,
-    _: JClass,
-) -> jstring {
+pub extern "jni" fn listen() -> String {
     let runtime = runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -86,38 +76,7 @@ pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_
     // env.call_method(callback, "factCallback", "(I)V", &[res.into()])
     // .unwrap();
 
-    let output = env
-        .new_string(format!("I did a connect: {}", msg))
-        .expect("Couldn't create a Java string!");
-    output.into_inner()
+    format!("I did a connect: {}", msg)
 }
-
-#[no_mangle]
-pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_sleep(
-    env: JNIEnv,
-    _: JClass,
-) -> jstring {
-    let runtime = runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .unwrap();
-
-    runtime.block_on(async { sleep(Duration::from_millis(1000)).await });
-    // runtime.block_on(nothing());
-
-    let output = env
-        .new_string(format!("I did a sleep"))
-        .expect("Couldn't create a Java string!");
-    output.into_inner()
-}
-
-#[no_mangle]
-pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_hello(
-    env: JNIEnv,
-    _: JClass,
-) -> jstring {
-    let output = env
-        .new_string(format!("Whee this string is from Rust: {:?}", Some(5)))
-        .expect("Couldn't create a Java string!");
-    output.into_inner()
+    }
 }
