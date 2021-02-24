@@ -21,7 +21,7 @@ import com.example.jetpackcomposehelloworld.ui.theme.JetpackComposeHelloWorldThe
 
 external fun listen(): String;
 external fun init();
-external fun sendMsg(message: String)
+external fun sendMsg(message: ByteArray)
 
 fun loadTestLib() {
     System.loadLibrary("roast")
@@ -93,10 +93,7 @@ fun NewsStory() {
 
             Button(onClick = {
                 Thread {
-//                    labelText.value = connect()
-//                    labelText.value = connect(::setLabelText)
-                    sendMsg("this kotlin string will be ignored")
-
+                    sendMsg("Message from kotlin!".toByteArray())
                 }.start()
             }) {
                 Text(labelText.value)

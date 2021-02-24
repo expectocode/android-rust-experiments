@@ -3,8 +3,8 @@
 
 use std::time::Duration;
 
-use jni::objects::{JClass, JObject};
-use jni::sys::jstring;
+use jni::objects::JClass;
+use jni::sys::{jbyteArray, jstring};
 use jni::JNIEnv;
 use tokio::runtime;
 use tokio::sync::mpsc;
@@ -19,7 +19,7 @@ use log::{debug, error, info, trace, warn};
 
 use once_cell::sync::OnceCell;
 
-static CELL: OnceCell<mpsc::Sender<&[u8]>> = OnceCell::new();
+static CELL: OnceCell<mpsc::Sender<Vec<u8>>> = OnceCell::new();
 
 #[no_mangle]
 pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_init(
@@ -32,13 +32,13 @@ pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_
 
 #[no_mangle]
 pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_sendMsg(
-    _env: JNIEnv,
+    env: JNIEnv,
     _: JClass,
-    input: JObject,
+    input: jbyteArray,
 ) {
-    warn!("Should be using input :{:?}", input);
+    let input = env.convert_byte_array(input).unwrap();
     let tx = CELL.get().unwrap();
-    tx.blocking_send(b"heyyoooo").unwrap();
+    tx.blocking_send(input).unwrap();
 }
 
 #[no_mangle]
@@ -59,6 +59,7 @@ pub extern "system" fn Java_com_example_jetpackcomposehelloworld_MainActivityKt_
 
         while let Some(res) = rx.recv().await {
             warn!("rust got = {:?}", res);
+            warn!("string version = {:?}", String::from_utf8_lossy(&res));
         }
 
         let api_id = 85381;
